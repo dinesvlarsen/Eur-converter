@@ -60,31 +60,32 @@ export default {
 
 	async created() {
 		await this.getData();
-		await this.ipLookUp();
+		// await this.ipLookUp();
+		this.userCountryCurrency = 'NOK';
 		this.convertFrom.currencyFullName = this.usersCountryCurrency;
 	},
 
 	methods: {
-		async ipLookUp() {
-			try {
-				const ipUrl = 'http://ip-api.com/json';
-				const location = await this.getDataFromUrl(ipUrl, 'country');
+		// async ipLookUp() {
+		// 	try {
+		// 		const ipUrl = 'http://ip-api.com/json';
+		// 		const location = await this.getDataFromUrl(ipUrl, 'country');
 
-				const restCountriesUrl = `https://restcountries.com/v2/name/${location.toLowerCase()}`;
+		// 		const restCountriesUrl = `https://restcountries.com/v2/name/${location.toLowerCase()}`;
 
-				const countryData = await this.getDataFromUrl(restCountriesUrl);
-				const countryCurrencyCode =
-					countryData[0].currencies[0].code.toLowerCase();
+		// 		const countryData = await this.getDataFromUrl(restCountriesUrl);
+		// 		const countryCurrencyCode =
+		// 			countryData[0].currencies[0].code.toLowerCase();
 
-				const objectCopy = Object.assign({}, this.currencyFullNames);
+		// 		const objectCopy = Object.assign({}, this.currencyFullNames);
 
-				this.usersCountryCurrency = objectCopy[countryCurrencyCode];
-			} catch (error) {
-				//If any of the location apis fail to get location of the user on startup, it will just set the default value to be Euro.
-				console.error('hello there was an error: ' + error);
-				this.usersCountryCurrency = 'Euro';
-			}
-		},
+		// 		this.usersCountryCurrency = objectCopy[countryCurrencyCode];
+		// 	} catch (error) {
+		// 		//If any of the location apis fail to get location of the user on startup, it will just set the default value to be Euro.
+		// 		console.error('hello there was an error: ' + error.text);
+		// 		this.usersCountryCurrency = '';
+		// 	}
+		// },
 
 		async getData() {
 			const urlCurrencyRates =
