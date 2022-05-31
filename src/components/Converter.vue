@@ -199,7 +199,7 @@ export default {
 	appearance: none;
 
 	/* Adds your own arrow */
-	background-image: url(public/images/dropdown-arrow.svg);
+	background-image: url(./images/dropdown-arrow.svg);
 	/* Stops it from being 90000 arrows */
 	background-repeat: no-repeat;
 	/* Positions arrow within the select element */
