@@ -5,8 +5,8 @@ We also use the [restcountries](https://restcountries.com/) api to look up what 
 
 
 ## How to run on your local machine
-- Navigate to **BlogThing/app** and run **npm install**
-- To start localhost navigate to **BlogThing/app** and run **npm run dev**
+- Run **npm install**
+- To start localhost run **npm run dev**
 - The key to the ipinfo is in a Netlify env variable, so to get it to work on your local machine you have to replace the key used in app/src/Converter.vue.
 ```js
 async getUserCity() {
