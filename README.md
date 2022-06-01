@@ -21,8 +21,6 @@ const response = await fetch(
 
 const { city } = await response.json();
 
-  
-
 return city;
 
 },
