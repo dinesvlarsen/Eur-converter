@@ -6,7 +6,7 @@
 	<div v-else class="converter">
 		<h1 class="converter__heading">EUR Converter</h1>
 		<p class="converter__selected-currency">
-			{{ convertFrom.amount }} {{ usersCountryCurrency }} equals
+			{{ convertFrom.userInput }} {{ convertFrom.fullname }} equals
 		</p>
 
 		<div class="converter__calculated-output">{{ calculateValue() }} EUR</div>
@@ -17,7 +17,7 @@
 				type="number"
 				name="Currency Amount"
 				id=""
-				v-model="convertFrom.amount"
+				v-model="convertFrom.userInput"
 				aria-label="Currency Amount"
 			/>
 
@@ -25,14 +25,11 @@
 				class="controls__dropdown"
 				name="convert-from"
 				id="convert-from"
-				v-model="convertFrom.currencyFullName"
+				v-model="convertFrom.fullname"
+				:value="convertFrom.fullname"
 				aria-label="Currency Type"
 			>
-				<option
-					v-for="(value, key) in currencyFullNames"
-					:key="key"
-					:value="value"
-				>
+				<option v-for="value in fullNamesObject" :value="value">
 					{{ value }}
 				</option>
 			</select>
@@ -47,69 +44,56 @@ export default {
 			loading: true,
 			data: [],
 			convertFrom: {
-				currencyFullName: '',
+				fullname: '',
 				currencyInitials: '',
-				amount: 1,
+				userInput: 1, //The value the user inputs
 			},
-			currencyFullNames: {},
-			currencyRatesData: [],
-			usersCountryCurrency: '',
+			fullNamesObject: {}, //Object containing currency full-names accessed through their currency code e.g 'nok' : 'Norwegian Krone'
+			allRates: {},
 			currencyRate: 0,
 		};
 	},
 
 	async created() {
 		await this.getData();
-		// await this.ipLookUp();
-		this.userCountryCurrency = 'NOK';
-		this.convertFrom.currencyFullName = this.usersCountryCurrency;
+		this.setInitialUserData('Norwegian krone', 'nok');
 	},
 
 	methods: {
-		// async ipLookUp() {
-		// 	try {
-		// 		const ipUrl = 'http://ip-api.com/json';
-		// 		const location = await this.getDataFromUrl(ipUrl, 'country');
+		setInitialUserData(fullname, initials) {
+			this.convertFrom.fullname = fullname;
+			this.convertFrom.currencyInitials = initials;
+		},
 
-		// 		const restCountriesUrl = `https://restcountries.com/v2/name/${location.toLowerCase()}`;
-
-		// 		const countryData = await this.getDataFromUrl(restCountriesUrl);
-		// 		const countryCurrencyCode =
-		// 			countryData[0].currencies[0].code.toLowerCase();
-
-		// 		const objectCopy = Object.assign({}, this.currencyFullNames);
-
-		// 		this.usersCountryCurrency = objectCopy[countryCurrencyCode];
-		// 	} catch (error) {
-		// 		//If any of the location apis fail to get location of the user on startup, it will just set the default value to be Euro.
-		// 		console.error('hello there was an error: ' + error.text);
-		// 		this.usersCountryCurrency = '';
-		// 	}
-		// },
-
+		//Initial method that runs to query for the euro data we need.
 		async getData() {
-			const urlCurrencyRates =
+			//api link to query for the current rates
+			const currencyRatesURL =
 				'https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/eur.json';
 
-			const urlcurrencyFullNames =
+			//	api link to query for the full name of the currency.
+			const fullNamesURL =
 				'https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.min.json';
 
-			this.currencyRatesData = await this.getDataFromUrl(
-				urlCurrencyRates,
-				'eur'
-			);
-			this.currencyFullNames = await this.getDataFromUrl(urlcurrencyFullNames);
+			// returns the currency rates from querying the URL
+			// we pass inn 'eur' as an argument so we get the currency rates.
+			// we use 'eur' because the response from the currencyrates request is different than full names. So we use the string 'eur' as a key to access what we want.
+			this.allRates = await this.getDataFromURL(currencyRatesURL, 'eur');
+
+			//we store the object containing the currency names in key value pairs:
+			this.fullNamesObject = await this.getDataFromURL(fullNamesURL);
 
 			this.loading = false;
 		},
 
-		async getDataFromUrl(url, key) {
+		//Gets either currency data (if 'eur' is specified) or currency full names.
+		async getDataFromURL(url, eur) {
 			try {
 				const response = await fetch(url);
 				const data = await response.json();
 
-				if (key) {
-					return data[key];
+				if (eur) {
+					return data[eur];
 				}
 
 				return data;
@@ -120,26 +104,31 @@ export default {
 		},
 
 		//Function to get a key based on a value in an object, taken from https://stackoverflow.com/questions/9907419/how-to-get-a-key-in-a-javascript-object-by-its-value
-		getKeyByValue(object, value) {
+		getCurrencyInitials(object, value) {
+			console.log(Object.keys(object).find((key) => object[key] === value));
 			return Object.keys(object).find((key) => object[key] === value);
 		},
 
 		calculateValue() {
-			this.currencyRate =
-				this.currencyRatesData[this.convertFrom.currencyInitials];
+			this.currencyRate = this.allRates[this.convertFrom.currencyInitials];
 			const sum =
-				this.convertFrom.amount /
-				this.currencyRatesData[this.convertFrom.currencyInitials];
+				this.convertFrom.userInput /
+				this.allRates[this.convertFrom.currencyInitials];
 			return sum.toFixed(2);
 		},
 	},
 
 	watch: {
-		'convertFrom.currencyFullName'() {
-			const targetCopy = Object.assign({}, this.currencyFullNames);
-			const key = this.convertFrom.currencyFullName;
-			this.convertFrom.currencyInitials = this.getKeyByValue(targetCopy, key);
-			this.usersCountryCurrency = this.convertFrom.currencyFullName;
+		//Controls the entire conversion operation, and sets all the values for the output.
+		'convertFrom.fullname'() {
+			const fullname = this.convertFrom.fullname;
+
+			//Gets the currency initials from the object containing all the currency initials and full names by iterating over the object and checking its values against the name we've passed in as an argument. Returning the key of the matching value.
+			//E.g 'Norwegian krone' === 'Norwegian krone' and norwegian krone has 'nok as a key, so we get NOK
+			this.convertFrom.currencyInitials = this.getCurrencyInitials(
+				this.fullNamesObject,
+				fullname
+			);
 		},
 	},
 };
@@ -200,7 +189,7 @@ export default {
 	appearance: none;
 
 	/* Adds your own arrow */
-	background-image: url(./images/dropdown-arrow.svg);
+	background-image: url(images/dropdown-arrow.svg);
 	/* Stops it from being 90000 arrows */
 	background-repeat: no-repeat;
 	/* Positions arrow within the select element */
