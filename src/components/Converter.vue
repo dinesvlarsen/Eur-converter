@@ -82,7 +82,7 @@ export default {
 		async getUserCity() {
 			const ipinfo_key = import.meta.env.VITE_IPINFO_API_KEY;
 			const response = await fetch(
-				`https://ipinfo.io/json?token=${ipinfo_key}`
+				`https://ipinfo.io/json?token=${process.env.IP_INFO_KEY}`
 			);
 			const { city } = await response.json();
 
