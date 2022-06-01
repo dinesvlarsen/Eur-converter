@@ -55,17 +55,26 @@ export default {
 	},
 
 	async created() {
+		//Gets the euro conversion rates, and names
 		await this.getData();
 		await this.setUserData();
 	},
 
 	methods: {
 		async setUserData() {
-			const userCity = await this.getUserCity();
-			console.log(userCity);
-			const [initials, fullname] = await this.getUserCurrency(userCity);
-			this.convertFrom.currencyInitials = initials;
-			this.convertFrom.fullname = fullname;
+			try {
+				const userCity = await this.getUserCity();
+				const [initials, fullname] = await this.getUserCurrency(userCity);
+				this.convertFrom.currencyInitials = initials;
+				this.convertFrom.fullname = fullname;
+			} catch (e) {
+				console.error(e);
+				console.error(
+					"Couldn't load local currency, probably caused by something blocking use from getting your ip (Ad block?"
+				);
+				this.convertFrom.currencyInitials = 'nok';
+				this.convertFrom.fullname = 'Norwegian krone';
+			}
 
 			this.loading = false;
 		},
@@ -74,7 +83,7 @@ export default {
 			const ipinfo_key = import.meta.env.VITE_IPINFO_API_KEY;
 			const response = await fetch(
 				`https://ipinfo.io/json?token=${ipinfo_key}`
-			).catch((error) => console.error('failed to fetch ipinfo: ', error));
+			);
 			const { city } = await response.json();
 
 			return city;
@@ -96,7 +105,7 @@ export default {
 			return list;
 		},
 
-		//Initial method that runs to query for the euro data we need.
+		//Initial method that runs to query for the currency initials, full names euro conversion rates.
 		async getData() {
 			//api link to query for the current rates
 			const currencyRatesURL =
@@ -111,7 +120,7 @@ export default {
 			// we use 'eur' because the response from the currencyrates request is different than full names. So we use the string 'eur' as a key to access what we want.
 			this.allRates = await this.getDataFromURL(currencyRatesURL, 'eur');
 
-			//we store the object containing the currency names in key value pairs:
+			//we store the object containing the currency initials and full names in key value pairs: {}
 			this.fullNamesObject = await this.getDataFromURL(fullNamesURL);
 		},
 
