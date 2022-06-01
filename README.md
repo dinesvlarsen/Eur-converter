@@ -1,5 +1,7 @@
 # Eur converter
-A simple Eur converter, which gets conversion data from [fawazahmed0/currency-api](https://github.com/fawazahmed0/currency-api) it also uses ipinfo to get your location and sets the initial currency to convert from to be your local currency.
+A simple Eur converter, which gets conversion data from [fawazahmed0/currency-api](https://github.com/fawazahmed0/currency-api). 
+It also uses [ipinfo](https://ipinfo.io/) to get your location.
+We also use the [restcountries](https://restcountries.com/) api to look up what your countries currency is, which we default to on load(assuming we got your location, if not it will default to Norwegian krones).
 
 
 ## How to run on your local machine
