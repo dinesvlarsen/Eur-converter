@@ -55,6 +55,8 @@ export default {
 	},
 
 	async created() {
+		console.log(process.env.THIS_IS_TEST);
+
 		//Gets the euro conversion rates, and names
 		await this.getData();
 		await this.setUserData();
@@ -80,9 +82,9 @@ export default {
 		},
 
 		async getUserCity() {
-			const ipinfo_key = import.meta.env.VITE_IPINFO_API_KEY;
+			const ipinfo_key = process.env.IP_INFO_KEY;
 			const response = await fetch(
-				`https://ipinfo.io/json?token=${process.env.IP_INFO_KEY}`
+				`https://ipinfo.io/json?token=${ipinfo_key}`
 			);
 			const { city } = await response.json();
 
