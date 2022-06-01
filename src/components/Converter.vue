@@ -56,13 +56,44 @@ export default {
 
 	async created() {
 		await this.getData();
-		this.setInitialUserData('Norwegian krone', 'nok');
+		await this.setUserData();
 	},
 
 	methods: {
-		setInitialUserData(fullname, initials) {
-			this.convertFrom.fullname = fullname;
+		async setUserData() {
+			const userCity = await this.getUserCity();
+			console.log(userCity);
+			const [initials, fullname] = await this.getUserCurrency(userCity);
 			this.convertFrom.currencyInitials = initials;
+			this.convertFrom.fullname = fullname;
+
+			this.loading = false;
+		},
+
+		async getUserCity() {
+			const ipinfo_key = import.meta.env.VITE_IPINFO_API_KEY;
+			const response = await fetch(
+				`https://ipinfo.io/json?token=${ipinfo_key}`
+			).catch((error) => console.error('failed to fetch ipinfo: ', error));
+			const { city } = await response.json();
+
+			return city;
+		},
+		//Uses the users capital (retrieved from getUserIp) and requests the currency data from the restcountries api.
+		async getUserCurrency(capital) {
+			const response = await fetch(
+				`https://restcountries.com/v3.1/capital/${capital}?fields=currencies`
+			).catch((error) =>
+				console.error('failed to fetch capital: ', error.text)
+			);
+			const data = await response.json();
+
+			const list = [];
+			const initials = Object.keys(data[0].currencies)[0].toLowerCase();
+			const fullname = data[0].currencies[initials.toUpperCase()].name;
+			list.push(initials, fullname);
+
+			return list;
 		},
 
 		//Initial method that runs to query for the euro data we need.
@@ -82,8 +113,6 @@ export default {
 
 			//we store the object containing the currency names in key value pairs:
 			this.fullNamesObject = await this.getDataFromURL(fullNamesURL);
-
-			this.loading = false;
 		},
 
 		//Gets either currency data (if 'eur' is specified) or currency full names.
@@ -104,9 +133,13 @@ export default {
 		},
 
 		//Function to get a key based on a value in an object, taken from https://stackoverflow.com/questions/9907419/how-to-get-a-key-in-a-javascript-object-by-its-value
-		getCurrencyInitials(object, value) {
-			console.log(Object.keys(object).find((key) => object[key] === value));
-			return Object.keys(object).find((key) => object[key] === value);
+		getCurrencyInitials(fullNamesObject, fullname) {
+			const allCurrencyInitials = Object.keys(fullNamesObject);
+			const currencyInitials = allCurrencyInitials.find(
+				(currencyInitials) => fullNamesObject[currencyInitials] === fullname
+			);
+
+			return currencyInitials;
 		},
 
 		calculateValue() {
@@ -123,7 +156,7 @@ export default {
 		'convertFrom.fullname'() {
 			const fullname = this.convertFrom.fullname;
 
-			//Gets the currency initials from the object containing all the currency initials and full names by iterating over the object and checking its values against the name we've passed in as an argument. Returning the key of the matching value.
+			//Gets the currency initials from the object containing all the currency initials and full names, by iterating over the object with .find and checking its values against the name we've passed in as an argument. Returning the key of the matching value.
 			//E.g 'Norwegian krone' === 'Norwegian krone' and norwegian krone has 'nok as a key, so we get NOK
 			this.convertFrom.currencyInitials = this.getCurrencyInitials(
 				this.fullNamesObject,
