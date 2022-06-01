@@ -70,7 +70,7 @@ export default {
 			} catch (e) {
 				console.error(e);
 				console.error(
-					"Couldn't load local currency, probably caused by something blocking use from getting your ip (Ad block?"
+					"Couldn't load local currency data, probably caused by something blocking us from getting your ip (Ad block?)"
 				);
 				this.convertFrom.currencyInitials = 'nok';
 				this.convertFrom.fullname = 'Norwegian krone';
@@ -80,8 +80,6 @@ export default {
 		},
 
 		async getUserCity() {
-			const test = import.meta.env.VITE_THIS_IS_TEST;
-			console.log(test);
 			const ipinfo_key = import.meta.env.VITE_IP_INFO_KEY;
 			const response = await fetch(
 				`https://ipinfo.io/json?token=${ipinfo_key}`
